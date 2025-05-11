@@ -1,7 +1,7 @@
 #include "Logger.h"
 
 Logger::Logger(int chipSelectPin)
-  : _csPin(chipSelectPin), _filename("log.csv"), _precision(2) {}
+  : _csPin(chipSelectPin), _filename("log.csv"), _precision(2), _headerWritten(false) {}
 
 bool Logger::begin() {
   if (!_rtc.begin()) {
@@ -18,6 +18,10 @@ bool Logger::begin() {
     return false;
   }
 
+  if (SD.exists(_filename)) {
+    _headerWritten = true;
+  }
+
   return true;
 }
 
@@ -25,27 +29,12 @@ void Logger::datafile(const String& filename) {
   _filename = filename;
 }
 
-void Logger::header(const std::vector<String>& headers) {
-  if (!fileExists()) {
-    File file = SD.open(_filename, FILE_WRITE);
-    if (file) {
-      file.print("Timestamp");
-      for (const auto& h : headers) {
-        file.print(", ");
-        file.print(h);
-      }
-      file.println();
-      file.close();
-    }
+void Logger::data(const String& label, float& variable) {
+  // Only bind unique labels
+  for (const auto& b : _bindings) {
+    if (b.label == label) return;
   }
-}
-
-void Logger::data(float value) {
-  _dataBuffer.push_back(String(value, _precision));
-}
-
-void Logger::data(const String& value) {
-  _dataBuffer.push_back(value);
+  _bindings.push_back({ label, &variable });
 }
 
 bool Logger::datalog() {
@@ -55,14 +44,23 @@ bool Logger::datalog() {
     return false;
   }
 
+  if (!_headerWritten) {
+    file.print("Timestamp");
+    for (const auto& b : _bindings) {
+      file.print(", ");
+      file.print(b.label);
+    }
+    file.println();
+    _headerWritten = true;
+  }
+
   file.print(getTimestamp());
-  for (const auto& val : _dataBuffer) {
+  for (const auto& b : _bindings) {
     file.print(", ");
-    file.print(val);
+    file.print(*(b.ptr), _precision);
   }
   file.println();
   file.close();
-  _dataBuffer.clear();
   return true;
 }
 

@@ -12,9 +12,7 @@ class Logger {
 
     bool begin();
     void datafile(const String& filename);
-    void header(const std::vector<String>& headers);
-    void data(float value);
-    void data(const String& value);
+    void data(const String& label, float& variable);  // Automatic reference binding
     bool datalog();
     void comment(const String& text);
     bool fileExists() const;
@@ -22,11 +20,17 @@ class Logger {
     String readLastLine();
 
   private:
+    struct Binding {
+      String label;
+      float* ptr;
+    };
+
     int _csPin;
     String _filename;
     RTC_DS3231 _rtc;
-    std::vector<String> _dataBuffer;
+    std::vector<Binding> _bindings;
     uint8_t _precision;
+    bool _headerWritten;
 
     String getTimestamp() const;
 };
