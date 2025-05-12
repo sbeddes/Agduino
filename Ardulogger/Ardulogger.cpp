@@ -1,9 +1,9 @@
-#include "Logger.h"
+#include "Ardulogger.h"
 
-Logger::Logger(int chipSelectPin)
+Ardulogger::Ardulogger(int chipSelectPin)
   : _csPin(chipSelectPin), _filename("log.csv"), _precision(2), _headerWritten(false) {}
 
-bool Logger::begin() {
+bool Ardulogger::begin() {
   if (!_rtc.begin()) {
     Serial.println("RTC not found");
     return false;
@@ -25,19 +25,18 @@ bool Logger::begin() {
   return true;
 }
 
-void Logger::datafile(const String& filename) {
+void Ardulogger::datafile(const String& filename) {
   _filename = filename;
 }
 
-void Logger::data(const String& label, float& variable) {
-  // Only bind unique labels
+void Ardulogger::data(const String& label, float& variable) {
   for (const auto& b : _bindings) {
     if (b.label == label) return;
   }
   _bindings.push_back({ label, &variable });
 }
 
-bool Logger::datalog() {
+bool Ardulogger::datalog() {
   File file = SD.open(_filename, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file");
@@ -64,7 +63,7 @@ bool Logger::datalog() {
   return true;
 }
 
-void Logger::comment(const String& text) {
+void Ardulogger::comment(const String& text) {
   File file = SD.open(_filename, FILE_WRITE);
   if (file) {
     file.print("# ");
@@ -75,15 +74,15 @@ void Logger::comment(const String& text) {
   }
 }
 
-bool Logger::fileExists() const {
+bool Ardulogger::fileExists() const {
   return SD.exists(_filename);
 }
 
-void Logger::setPrecision(uint8_t digits) {
+void Ardulogger::setPrecision(uint8_t digits) {
   _precision = digits;
 }
 
-String Logger::readLastLine() {
+String Ardulogger::readLastLine() {
   File file = SD.open(_filename, FILE_READ);
   if (!file) return "";
 
@@ -101,7 +100,7 @@ String Logger::readLastLine() {
   return lastLine;
 }
 
-String Logger::getTimestamp() const {
+String Ardulogger::getTimestamp() {
   DateTime now = _rtc.now();
   char buffer[20];
   sprintf(buffer, "%04d-%02d-%02d %02d:%02d:%02d",

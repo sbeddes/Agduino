@@ -1,14 +1,14 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef ARDULOGGER_H
+#define ARDULOGGER_H
 
 #include <Arduino.h>
 #include <RTClib.h>
 #include <SD.h>
 #include <vector>
 
-class Logger {
+class Ardulogger {
   public:
-    Logger(int chipSelectPin);
+    Ardulogger(int chipSelectPin);
 
     bool begin();
     void datafile(const String& filename);
@@ -32,7 +32,7 @@ class Logger {
     uint8_t _precision;
     bool _headerWritten;
 
-    String getTimestamp() const;
+    String getTimestamp();
 };
 
 #endif
