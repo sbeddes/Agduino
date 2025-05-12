@@ -1,7 +1,7 @@
 #include <Ardulogger.h>
 
 // Initialize logger with SD chip select pin
-Logger logger(10);
+Ardulogger logger(10);
 
 // Sensor variables to track
 float vwc1 = 0.0;
