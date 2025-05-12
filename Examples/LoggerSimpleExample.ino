@@ -1,4 +1,4 @@
-#include <Logger.h>
+#include <Ardulogger.h>
 
 Logger logger(10);  // SD card CS pin
 
@@ -8,7 +8,7 @@ float temperature = 0.0;
 void setup() {
   Serial.begin(9600);
   logger.begin();
-  logger.datafile("greenhouse.csv");
+  logger.datafile("test.csv"); // Could use any type of text file 
 
   // Auto-bind variables (no ampersands)
   logger.data("Moisture", moisture);
