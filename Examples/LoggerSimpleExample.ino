@@ -1,6 +1,6 @@
 #include <Ardulogger.h>
 
-Logger logger(10);  // SD card CS pin
+Ardulogger logger(10);  // SD card CS pin
 
 float moisture = 0.0;
 float temperature = 0.0;
