@@ -13,12 +13,12 @@ bool Ardulogger::begin() {
     _rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 
-  if (!SD.begin(_csPin)) {
+  if (!_sd.begin(_csPin, SD_SCK_MHZ(8))) {
     Serial.println("SD init failed");
     return false;
   }
 
-  if (SD.exists(_filename)) {
+  if (_sd.exists(_filename.c_str())) {
     _headerWritten = true;
   }
 
@@ -37,45 +37,46 @@ void Ardulogger::data(const String& label, float& variable) {
 }
 
 bool Ardulogger::datalog() {
-  File file = SD.open(_filename, FILE_WRITE);
-  if (!file) {
-    Serial.println("Failed to open file");
+  _file = _sd.open(_filename.c_str(), FILE_WRITE);
+  if (!_file) {
+    Serial.print("Failed to open file: ");
+    Serial.println(_filename);
     return false;
   }
 
   if (!_headerWritten) {
-    file.print("Timestamp");
+    _file.print("Timestamp");
     for (const auto& b : _bindings) {
-      file.print(", ");
-      file.print(b.label);
+      _file.print(", ");
+      _file.print(b.label);
     }
-    file.println();
+    _file.println();
     _headerWritten = true;
   }
 
-  file.print(getTimestamp());
+  _file.print(getTimestamp());
   for (const auto& b : _bindings) {
-    file.print(", ");
-    file.print(*(b.ptr), _precision);
+    _file.print(", ");
+    _file.print(*(b.ptr), _precision);
   }
-  file.println();
-  file.close();
+  _file.println();
+  _file.close();
   return true;
 }
 
 void Ardulogger::comment(const String& text) {
-  File file = SD.open(_filename, FILE_WRITE);
-  if (file) {
-    file.print("# ");
-    file.print(getTimestamp());
-    file.print(", ");
-    file.println(text);
-    file.close();
+  _file = _sd.open(_filename.c_str(), FILE_WRITE);
+  if (_file) {
+    _file.print("# ");
+    _file.print(getTimestamp());
+    _file.print(", ");
+    _file.println(text);
+    _file.close();
   }
 }
 
 bool Ardulogger::fileExists() const {
-  return SD.exists(_filename);
+  return _sd.exists(_filename.c_str());
 }
 
 void Ardulogger::setPrecision(uint8_t digits) {
@@ -83,12 +84,12 @@ void Ardulogger::setPrecision(uint8_t digits) {
 }
 
 String Ardulogger::readLastLine() {
-  File file = SD.open(_filename, FILE_READ);
-  if (!file) return "";
+  _file = _sd.open(_filename.c_str(), FILE_READ);
+  if (!_file) return "";
 
   String lastLine = "", currentLine = "";
-  while (file.available()) {
-    char c = file.read();
+  while (_file.available()) {
+    char c = _file.read();
     if (c == '\n') {
       lastLine = currentLine;
       currentLine = "";
@@ -96,7 +97,7 @@ String Ardulogger::readLastLine() {
       currentLine += c;
     }
   }
-  file.close();
+  _file.close();
   return lastLine;
 }
 
